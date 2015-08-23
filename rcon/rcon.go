@@ -13,15 +13,17 @@ import (
 	"github.com/benwebber/craftctl/config"
 )
 
+type packetType int32
+
 const NUL = "\x00"
 
 // RCON request / response codes
 const (
-	SERVERDATA_AUTH           = 3
-	SERVERDATA_AUTH_RESPONSE  = 2
-	SERVERDATA_AUTH_FAILED    = -1
-	SERVERDATA_EXECCOMMAND    = 2
-	SERVERDATA_RESPONSE_VALUE = 0
+	SERVERDATA_AUTH           packetType = 3
+	SERVERDATA_AUTH_RESPONSE  packetType = 2
+	SERVERDATA_AUTH_FAILED    packetType = -1
+	SERVERDATA_EXECCOMMAND    packetType = 2
+	SERVERDATA_RESPONSE_VALUE packetType = 0
 )
 
 // Client represents an RCON client.
@@ -75,14 +77,14 @@ func (c *Client) read() (Packet, error) {
 }
 
 // Send a request to the RCON service.
-func (c *Client) send(t int32, command string) (resp string, err error) {
+func (c *Client) send(t packetType, command string) (resp string, err error) {
 	p := NewPacket(t, command)
 	c.write(&p)
 	r, err := c.read()
 	if err != nil {
 		return "", err
 	}
-	if r.Id == SERVERDATA_AUTH_FAILED {
+	if r.Id == int32(SERVERDATA_AUTH_FAILED) {
 		err = fmt.Errorf("authentication failed")
 	}
 	resp = string(r.Payload)
@@ -91,14 +93,14 @@ func (c *Client) send(t int32, command string) (resp string, err error) {
 
 // Packet represents an RCON request or response packet.
 type Packet struct {
-	Size    int32  // Size of message
-	Id      int32  // Message ID
-	Type    int32  // Message type (see SERVERDATA_ constants)
-	Payload []byte // Message payload
+	Size    int32      // Size of message
+	Id      int32      // Message ID
+	Type    packetType // Message type (see SERVERDATA_ constants)
+	Payload []byte     // Message payload
 }
 
 // NewPacket constructs a new Packet of type t that delivers payload p.
-func NewPacket(t int32, payload string) Packet {
+func NewPacket(t packetType, payload string) Packet {
 	// ID (int32) + type (int32) + null-terminated string + null string
 	size := 2*binary.Size(int32(0)) + 2*len(NUL) + len(payload)
 	return Packet{
@@ -138,7 +140,7 @@ func Unmarshall(data []byte) (Packet, error) {
 	return Packet{
 		Size:    size,
 		Id:      id,
-		Type:    type_,
+		Type:    packetType(type_),
 		Payload: bytes.Trim(data[12:], NUL),
 	}, err
 }
