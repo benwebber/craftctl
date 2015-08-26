@@ -10,6 +10,8 @@ import (
 	"github.com/codegangsta/cli"
 )
 
+//go:generate ./scripts/generate.py -i commands.txt -o init.go --format cli.go
+
 func main() {
 	app := cli.NewApp()
 	app.Name = "craftctl"
@@ -36,6 +38,11 @@ func main() {
 			Value:  "password",
 			Usage:  "RCON password",
 			EnvVar: "CRAFTCTL_PASSWORD",
+		},
+		// Hidden when app.HideHelp == true.
+		cli.BoolFlag{
+			Name:  "help, h",
+			Usage: "show help and exit",
 		},
 	}
 

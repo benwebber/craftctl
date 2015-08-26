@@ -6,4 +6,5 @@ set +e
 GIT_COMMIT=$(git rev-parse HEAD)
 set -e
 
+go generate
 go build -ldflags "-X main.GitCommit ${GIT_COMMIT}" -o dist/craftctl
