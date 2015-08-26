@@ -56,7 +56,12 @@ func main() {
 		}
 
 		client.Auth()
-		fmt.Println(client.Command(ctx.Args()...))
+		output, err := client.Command(ctx.Args()...)
+		if err != nil {
+			os.Stderr.WriteString(err.Error())
+			os.Exit(1)
+		}
+		fmt.Println(output)
 	}
 
 	app.Run(os.Args)
