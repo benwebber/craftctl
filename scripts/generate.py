@@ -10,9 +10,6 @@ from __future__ import print_function
 import subprocess
 import re
 
-formatter = '   {}'.format
-
-
 def get_help_page(page=None):
     command = ['./dist/craftctl', 'help']
     if page:
@@ -30,19 +27,19 @@ def commands():
         # Trivial: avoid unnecessary request.
         if page > 1:
             help_page = get_help_page(page)
-        # Remove header to isolate commands.
-        page_commands = re.sub(header, '', help_page)
-        # Split commands on /, except where the / presents alternate syntax,
-        # e.g., `tp`.
-        for line in re.sub(r'(\S)/(\S)', r'\1\n\2', page_commands).strip().split('\n'):
-            # Remove any / from the middle of the command.
-            yield line.replace('/', '')
+        # Remove header.
+        help_page = re.sub(header, '', help_page)
+        # Split alternative command forms.
+        help_page = help_page.replace('OR', '')
+        # Split commands.
+        for command in [c for c in help_page.split('/') if c]:
+            yield command
         page += 1
 
 
 def main():
     for c in commands():
-        print(formatter(c))
+        print(c)
 
 if __name__ == '__main__':
     main()
