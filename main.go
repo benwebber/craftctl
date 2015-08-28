@@ -62,16 +62,21 @@ func main() {
 			os.Exit(1)
 		}
 
-		client.Auth()
+		resp, err := client.Auth()
+		if err != nil {
+			os.Stderr.WriteString(err.Error() + "\n")
+			os.Exit(1)
+		}
+
 		command, err := rcon.NewCommand(ctx.Args()...)
 		if err != nil {
 			os.Stderr.WriteString(err.Error() + "\n")
 			os.Exit(1)
 		}
 
-		resp := client.Execute(command)
-		if resp.Err != nil {
-			os.Stderr.WriteString(resp.Err.Error() + "\n")
+		resp, err = client.Execute(command)
+		if err != nil {
+			os.Stderr.WriteString(err.Error() + "\n")
 			os.Exit(1)
 		}
 		fmt.Println(resp)
