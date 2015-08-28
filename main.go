@@ -65,7 +65,7 @@ func main() {
 		client.Auth()
 		output, err := client.Command(ctx.Args()...)
 		if err != nil {
-			os.Stderr.WriteString(err.Error())
+			os.Stderr.WriteString(err.Error() + "\n")
 			os.Exit(1)
 		}
 		fmt.Println(output)

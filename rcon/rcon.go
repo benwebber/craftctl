@@ -3,6 +3,7 @@ package rcon
 import (
 	"bytes"
 	"encoding/binary"
+	"errors"
 	"fmt"
 	"io"
 	"math/rand"
@@ -25,6 +26,21 @@ const (
 	SERVERDATA_EXECCOMMAND    packetType = 2
 	SERVERDATA_RESPONSE_VALUE packetType = 0
 )
+
+var (
+	AuthenticationError = errors.New("rcon: authentication failed")
+	UnknownCommandError = errors.New("rcon: unknown command")
+	UsageError          = errors.New("rcon: invalid syntax")
+	InvalidJSONError    = errors.New("rcon: invalid JSON")
+	PlayerNotFoundError = errors.New("rcon: player not found")
+)
+
+var errorMap = map[string]error{
+	"Usage:":                      UsageError,
+	"Unknown command.":            UnknownCommandError,
+	"Invalid json:":               InvalidJSONError,
+	"That player cannot be found": PlayerNotFoundError,
+}
 
 // Client represents an RCON client.
 type Client struct {
@@ -52,7 +68,8 @@ func (c *Client) Auth() (err error) {
 
 func (c *Client) Command(command ...string) (resp string, err error) {
 	cmd := prepareCommand(command...)
-	return c.send(SERVERDATA_EXECCOMMAND, cmd)
+	resp, err = c.send(SERVERDATA_EXECCOMMAND, cmd)
+	return
 }
 
 // Send a packet to the RCON service.
@@ -85,9 +102,16 @@ func (c *Client) send(t packetType, command string) (resp string, err error) {
 		return "", err
 	}
 	if r.Id == int32(SERVERDATA_AUTH_FAILED) {
-		err = fmt.Errorf("authentication failed")
+		err = AuthenticationError
+		return
 	}
 	resp = string(r.Payload)
+	for prefix, e := range errorMap {
+		if strings.HasPrefix(resp, prefix) {
+			err = e
+			return
+		}
+	}
 	return resp, err
 }
 
