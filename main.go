@@ -3,7 +3,6 @@ package main
 import (
 	"errors"
 	"fmt"
-	"log"
 	"os"
 
 	"github.com/benwebber/craftctl/config"
@@ -28,7 +27,7 @@ func checkArgs(ctx *cli.Context) error {
 	return nil
 }
 
-func realMain() (rc int) {
+func run() (rc int) {
 	app := cli.NewApp()
 	app.Name = "craftctl"
 	app.Usage = "Command-line Minecraft RCON client."
@@ -65,13 +64,13 @@ func realMain() (rc int) {
 
 	app.Action = func(ctx *cli.Context) {
 		cfg, err := config.NewConfigFromContext(ctx)
-		if err != nil {
-			log.Fatal(err.Error())
+		if rc = handleError(err); rc != 0 {
+			return
 		}
 
 		client, err := rcon.NewClient(cfg)
-		if err != nil {
-			log.Fatal(err.Error())
+		if rc = handleError(err); rc != 0 {
+			return
 		}
 
 		resp, err := client.Auth()
@@ -101,5 +100,5 @@ func realMain() (rc int) {
 }
 
 func main() {
-	os.Exit(realMain())
+	os.Exit(run())
 }
