@@ -19,7 +19,7 @@ func NewRequest(t packetType, payload ...string) (*Request, error) {
 			buf.WriteString("/")
 		}
 	case SERVERDATA_AUTH:
-		// Pass.
+		fallthrough
 	default:
 		return &Request{}, InvalidPacketType
 	}
