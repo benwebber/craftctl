@@ -26,7 +26,7 @@ func NewClient(cfg config.Config) (Client, error) {
 
 // Authenticate to the RCON service.
 func (c *Client) Auth() *Response {
-	r, err := NewRequest(SERVERDATA_AUTH, c.Config.Password)
+	r, err := NewAuthRequest(c.Config.Password)
 	if err != nil {
 		return &Response{
 			Packet: &Packet{},

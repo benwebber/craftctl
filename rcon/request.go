@@ -35,6 +35,10 @@ func NewRequest(t packetType, payload ...string) (*Request, error) {
 	}, nil
 }
 
+func NewAuthRequest(password string) (*Request, error) {
+	return NewRequest(SERVERDATA_AUTH, password)
+}
+
 func NewCommand(payload ...string) (*Request, error) {
 	return NewRequest(SERVERDATA_EXECCOMMAND, payload...)
 }
