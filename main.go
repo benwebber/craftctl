@@ -63,12 +63,18 @@ func main() {
 		}
 
 		client.Auth()
-		output, err := client.Command(ctx.Args()...)
+		command, err := rcon.NewCommand(ctx.Args()...)
 		if err != nil {
 			os.Stderr.WriteString(err.Error() + "\n")
 			os.Exit(1)
 		}
-		fmt.Println(output)
+
+		resp := client.Execute(command)
+		if resp.Err != nil {
+			os.Stderr.WriteString(resp.Err.Error() + "\n")
+			os.Exit(1)
+		}
+		fmt.Println(resp)
 	}
 
 	app.Run(os.Args)
