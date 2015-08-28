@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -12,13 +13,29 @@ import (
 
 //go:generate ./scripts/generate.py -i commands.txt -o init.go --format cli.go
 
-func main() {
+func handleError(err error) int {
+	if err != nil {
+		os.Stderr.WriteString(err.Error() + "\n")
+		return 1
+	}
+	return 0
+}
+
+func checkArgs(ctx *cli.Context) error {
+	if len(ctx.Args()) < 1 {
+		return errors.New("craftctl: enter a command")
+	}
+	return nil
+}
+
+func realMain() (rc int) {
 	app := cli.NewApp()
 	app.Name = "craftctl"
 	app.Usage = "Command-line Minecraft RCON client."
 	app.Version = fmt.Sprintf("%v (%v)", Version, GitCommit)
 	// Conflicts with console help command.
 	app.HideHelp = true
+	app.Before = checkArgs
 
 	app.Flags = []cli.Flag{
 		cli.StringFlag{
@@ -57,30 +74,32 @@ func main() {
 			log.Fatal(err.Error())
 		}
 
-		if len(ctx.Args()) < 1 {
-			os.Stderr.WriteString("craftctl: enter a command\n")
-			os.Exit(1)
-		}
-
 		resp, err := client.Auth()
-		if err != nil {
-			os.Stderr.WriteString(err.Error() + "\n")
-			os.Exit(1)
+		if rc = handleError(err); rc != 0 {
+			return
 		}
 
 		command, err := rcon.NewCommand(ctx.Args()...)
-		if err != nil {
-			os.Stderr.WriteString(err.Error() + "\n")
-			os.Exit(1)
+		if rc = handleError(err); rc != 0 {
+			return
 		}
 
 		resp, err = client.Execute(command)
-		if err != nil {
-			os.Stderr.WriteString(err.Error() + "\n")
-			os.Exit(1)
+		if rc = handleError(err); rc != 0 {
+			return
 		}
+
 		fmt.Println(resp)
 	}
 
-	app.Run(os.Args)
+	err := app.Run(os.Args)
+	if rc = handleError(err); rc != 0 {
+		return
+	}
+
+	return
+}
+
+func main() {
+	os.Exit(realMain())
 }
